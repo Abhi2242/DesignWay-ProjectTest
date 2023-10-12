@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">DesignWay Project</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="sign_up_here">Sign Up Here</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="user_name">User Name</string>
+    <string name="hi_there">Hi there,</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="name">Full Name</string>
+    <string name="create_account">Create Account</string>
+    <string name="register">Register</string>
+    <string name="bred_name">Breed Name :</string>
+    <string name="breed_group">Breed Group :</string>
+    <string name="breed_origin">Breed Origin :</string>
+    <string name="ugvu">ugvu</string>
+    <string name="dog_image">Dog Image</string>
+    <string name="bred_for">Breed for :</string>
+    <string name="life_span">Life Span :</string>
+    <string name="temperament">Temperament :</string>
+    <string name="width">Width :</string>
+    <string name="height">Height :</string>
+</resources>
