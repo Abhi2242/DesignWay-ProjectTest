@@ -1,85 +1,115 @@
 package com.smartgeek.designwayproject.activities.login
 
+import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import androidx.room.Room
 import com.smartgeek.designwayproject.R
 import com.smartgeek.designwayproject.activities.dogpages.DogBreedActivity
-import com.smartgeek.designwayproject.model.userdata.UserData
+import com.smartgeek.designwayproject.model.userdata.User
+import com.smartgeek.designwayproject.model.userdata.UserDB
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var signupBtn: TextView
-    private var userDataList: ArrayList<UserData>? = null
-
-    data class DuplicateUserDataList(val userName: String, val password: String)
-
-    private var duplicateDataList: java.util.ArrayList<DuplicateUserDataList>? = null
     private lateinit var userName: EditText
     private lateinit var userPass: EditText
     private lateinit var loginBtn: Button
 
+    data class DuplicateUserLoginData(val userName: String, val password: String)
+    private lateinit var errorText: TextView
+    private lateinit var dataBase: UserDB
+    private var userLoginData: List<User> = emptyList()
+    private var duplicateLoginData: List<DuplicateUserLoginData> = emptyList()
+
+
+    @SuppressLint("MissingInflatedId", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        loadData()
+        dataBase = Room.databaseBuilder(applicationContext, UserDB::class.java, "User_DataBase")
+            .fallbackToDestructiveMigration()
+            .build()
+
+
+        loadUserData()
+//        loadData()
 
         userName = findViewById(R.id.et_username)
         userPass = findViewById(R.id.et_pass)
         signupBtn = findViewById(R.id.tv_signup)
         loginBtn = findViewById(R.id.btn_login)
+        errorText = findViewById(R.id.tv_error_text1)
 
         loginBtn.setOnClickListener {
-            val userName = userName.text.toString()
-            val pass = userPass.text.toString()
+            val inputUserName = userName.text.toString()
+            val inputPass = userPass.text.toString()
 
-            // This Main function to perform
-            if (userName.isNotEmpty() && pass.isNotEmpty() && duplicateDataList?.contains(
-                    DuplicateUserDataList(userName, pass)
-                ) == true
-            ) {
-                Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show()
-                startActivity(
-                    Intent(this@LoginActivity, DogBreedActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
+            if (inputUserName.isNotEmpty() && inputPass.isNotEmpty()) {
+                val isLoginValid = duplicateLoginData.any {
+                    it.userName == inputUserName && it.password == inputPass
+                }
+
+                if (isLoginValid) {
+                    startActivity(
+                        Intent(this@LoginActivity, DogBreedActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                } else {
+                    errorText.visibility = View.VISIBLE
+                    errorText.text = "Incorrect Username or Password"
+                }
             } else {
-                Toast.makeText(this, "Incorrect Username or Password", Toast.LENGTH_SHORT).show()
+                errorText.visibility = View.VISIBLE
+                errorText.text = "Enter All Details"
             }
         }
+
 
         signupBtn.setOnClickListener {
             startActivity(Intent(this@LoginActivity, SignupActivity::class.java))
         }
     }
 
-    private fun loadData() {
-        val shareData: SharedPreferences = getSharedPreferences("Shared Data", MODE_PRIVATE)
-        val gson = Gson()
-        val json: String? = shareData.getString("Array List", null)
-        val type = object : TypeToken<ArrayList<UserData>>() {}.type
-        userDataList = gson.fromJson(json, type)
-        Log.i("Array List load user data", "$userDataList")
+//    private fun loadData() {
+//        val shareData: SharedPreferences = getSharedPreferences("Shared Data", MODE_PRIVATE)
+//        val gson = Gson()
+//        val json: String? = shareData.getString("Array List", null)
+//        val type = object : TypeToken<ArrayList<UserData>>() {}.type
+//        userDataList = gson.fromJson(json, type)
+//        Log.i("Array List load user data", "$userDataList")
+//
+//        if (userDataList?.size == null) {
+//            userDataList = ArrayList()
+//        } else {
+//            duplicateDataList =
+//                userDataList?.map {
+//                    DuplicateUserDataList(
+//                        it.userName,
+//                        it.uPassword
+//                    )
+//                } as ArrayList<DuplicateUserDataList>?
+//        }
+//    }
 
-        if (userDataList?.size == null) {
-            userDataList = ArrayList()
-        } else {
-            duplicateDataList =
-                userDataList?.map {
-                    DuplicateUserDataList(
-                        it.userName,
-                        it.uPassword
-                    )
-                } as java.util.ArrayList<DuplicateUserDataList>?
+    private fun loadUserData() {
+        CoroutineScope(Dispatchers.IO).launch {
+            userLoginData = dataBase.userDao().getAllUser ?: emptyList()
+            duplicateLoginData = userLoginData.map {
+                DuplicateUserLoginData(it.uName, it.uPass)
+            }
+            Log.i("user data login", "$duplicateLoginData")
         }
     }
+
 }
