@@ -41,9 +41,7 @@ class LoginActivity : AppCompatActivity() {
             .fallbackToDestructiveMigration()
             .build()
 
-
         loadUserData()
-//        loadData()
 
         userName = findViewById(R.id.et_username)
         userPass = findViewById(R.id.et_pass)
@@ -80,27 +78,6 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this@LoginActivity, SignupActivity::class.java))
         }
     }
-
-//    private fun loadData() {
-//        val shareData: SharedPreferences = getSharedPreferences("Shared Data", MODE_PRIVATE)
-//        val gson = Gson()
-//        val json: String? = shareData.getString("Array List", null)
-//        val type = object : TypeToken<ArrayList<UserData>>() {}.type
-//        userDataList = gson.fromJson(json, type)
-//        Log.i("Array List load user data", "$userDataList")
-//
-//        if (userDataList?.size == null) {
-//            userDataList = ArrayList()
-//        } else {
-//            duplicateDataList =
-//                userDataList?.map {
-//                    DuplicateUserDataList(
-//                        it.userName,
-//                        it.uPassword
-//                    )
-//                } as ArrayList<DuplicateUserDataList>?
-//        }
-//    }
 
     private fun loadUserData() {
         CoroutineScope(Dispatchers.IO).launch {

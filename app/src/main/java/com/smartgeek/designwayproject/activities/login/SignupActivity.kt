@@ -14,7 +14,9 @@ import com.smartgeek.designwayproject.R
 import com.smartgeek.designwayproject.activities.dogpages.DogBreedActivity
 import com.smartgeek.designwayproject.model.userdata.User
 import com.smartgeek.designwayproject.model.userdata.UserDB
-import com.smartgeek.designwayproject.model.userdata.UserData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class SignupActivity : AppCompatActivity() {
 
@@ -22,8 +24,6 @@ class SignupActivity : AppCompatActivity() {
     private lateinit var userName: EditText
     private lateinit var uPass: EditText
     private lateinit var registerBtn: Button
-    private var userDataList: ArrayList<UserData>? = null
-    private var userLoginData: ArrayList<User> = ArrayList()
     private lateinit var errorText: TextView
 
     data class DuplicateUserLoginData(
@@ -32,8 +32,10 @@ class SignupActivity : AppCompatActivity() {
         val password: String
     )
 
-    private var duplicateLoginData: ArrayList<DuplicateUserLoginData>? = ArrayList()
+    private var duplicateLoginData1: ArrayList<DuplicateUserLoginData>? = ArrayList()
     private lateinit var dataBase: UserDB
+    private var userLoginData1: ArrayList<User> = ArrayList()
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,12 +44,10 @@ class SignupActivity : AppCompatActivity() {
 
         dataBase =
             Room.databaseBuilder(applicationContext, UserDB::class.java, "User_DataBase")
-                .allowMainThreadQueries()
                 .fallbackToDestructiveMigration()
                 .build()
 
-//        loadUserData(dataBase)
-//        loadData()
+        loadUserData() // Loads user details from the database
 
         fullName = findViewById(R.id.et_sFullName)
         userName = findViewById(R.id.et_sUsername)
@@ -59,72 +59,31 @@ class SignupActivity : AppCompatActivity() {
             val fullName = fullName.text.toString()
             val userName = userName.text.toString()
             val pass = uPass.text.toString()
+            var userStatus = 0
             val regex =
                 "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#\$%&*()_+=|<>?{}\\\\~-]).{8,}".toRegex()
             if (fullName.isNotEmpty() && userName.isNotEmpty() && pass.isNotEmpty()) {
                 if (pass.contains(regex)) {
-
-                    var userStatus = 0
-                    userLoginData = ((dataBase.userDao().getAllUser as ArrayList<User>?)!!)
-                    duplicateLoginData =
-                        userLoginData.map {
-                            DuplicateUserLoginData(
-                                it.uFullName,
-                                it.uName,
-                                it.uPass
-                            )
-                        } as ArrayList<DuplicateUserLoginData>?
-                    if (duplicateLoginData?.contains(
-                            DuplicateUserLoginData(
-                                fullName,
-                                userName,
-                                pass
-                            )
-                        ) == false
-                    ) {
+                    if (duplicateLoginData1?.contains(DuplicateUserLoginData(fullName, userName, pass)) == false){
                         dataBase.userDao().insert(User(0, fullName, userName, pass))
                         userStatus = 1
+                    }
+                    else{
+                        errorText.visibility = View.VISIBLE
+                        errorText.text = "User Already Exist"
                     }
                     if (userStatus == 1) {
                         signUp()
                     } else {
                         errorText.visibility = View.VISIBLE
-                        errorText.text = "$userLoginData"
+                        errorText.text = "$userLoginData1"
                     }
-
-//                    if (duplicateLoginData?.contains(DuplicateUserLoginData(fullName, userName, pass)) == true) {
-//                        Thread{
-//                            dataBase.userDao().insert(User(0, fullName, userName,pass))
-//
-//                            Log.i("user data signup db", "${dataBase.userDao().getAllUser}")
-//                        }
-////                        saveLoginData(dataBase, fullName, userName, pass)
-//                    } else {
-//                        errorText.visibility = View.VISIBLE
-//                        errorText.text = "User Already Exist"
-////                        Toast.makeText(this, "User Already exist", Toast.LENGTH_SHORT).show()
-//                    }
-
-                    /* SharedPreferences method */
-//                    if (userDataList?.contains(UserData(fullName,userName,pass)) == false){
-//                        userDataList?.size?.let { userDataList?.add(it, UserData(fullName,userName,pass)) }
-//                        Toast.makeText(this, "$userDataList", Toast.LENGTH_SHORT).show()
-//                        saveData()
-//                        startActivity(/* intent = */ Intent(this, DogBreedActivity::class.java)
-//                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-//                        )
-//                    }
-//                    else{
-//                        Toast.makeText(this, "User Already exist", Toast.LENGTH_SHORT).show()
-//                    }
                 } else {
                     errorText.visibility = View.VISIBLE
-//                    Toast.makeText(this, "all details not present", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 errorText.visibility = View.VISIBLE
                 errorText.text = "Enter All Details"
-//                Toast.makeText(this, pass, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -136,42 +95,21 @@ class SignupActivity : AppCompatActivity() {
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
         )
     }
-
-//    private fun saveData() {
-//        val shareData: SharedPreferences = getSharedPreferences("Shared Data", MODE_PRIVATE)
-//        val editor: SharedPreferences.Editor = shareData.edit()
-//        val gson = Gson()
-//        val json: String = gson.toJson(userDataList?.distinct())
-//        editor.putString("Array List", json)
-//        editor.apply()
-//    }
-
-//    private fun loadData() {
-//        val shareData: SharedPreferences = getSharedPreferences("Shared Data", MODE_PRIVATE)
-//        val gson = Gson()
-//        val json: String? = shareData.getString("Array List", null)
-//        val type = object : TypeToken<ArrayList<UserData>>() {}.type
-//        userDataList = gson.fromJson(json, type)
-//        Log.i("Array List load user data", "$userDataList")
-//
-//        if (userDataList?.size == null) {
-//            userDataList = ArrayList()
-//        }
-//    }
-
-    private fun loadUserData(db: UserDB) {
-        Thread {
-            userLoginData = ((db.userDao().getAllUser as ArrayList<User>?)!!)
-            Log.i("user data signup1", "$userLoginData")
-            duplicateLoginData =
-                userLoginData.map {
+    private fun loadUserData() {
+        scope.launch {
+            val userData = dataBase.userDao().getAllUser // Suspend function
+            userData?.let {
+                userLoginData1 = ArrayList(it)
+                duplicateLoginData1 = userLoginData1.map { user->
                     DuplicateUserLoginData(
-                        it.uFullName,
-                        it.uName,
-                        it.uPass
+                        user.uFullName,
+                        user.uName,
+                        user.uPass
                     )
                 } as ArrayList<DuplicateUserLoginData>?
+            }
+            Log.i("user data signup", "$duplicateLoginData1")
         }
-        Log.i("user data signup2", "$duplicateLoginData")
     }
+
 }
