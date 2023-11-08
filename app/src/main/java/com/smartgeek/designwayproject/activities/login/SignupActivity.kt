@@ -1,5 +1,7 @@
 package com.smartgeek.designwayproject.activities.login
 
+// This code written by SMARTGEEK
+
 import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
