@@ -1,5 +1,7 @@
 package com.smartgeek.designwayproject.activities.dogpages
 
+// This code written by SMARTGEEK
+
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
